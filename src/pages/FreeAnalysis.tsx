@@ -60,10 +60,13 @@ const floorCounts = [
   '1-3 kat', '4-6 kat', '7-10 kat', '11+ kat', 'Bilmiyorum'
 ];
 
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbybyxuN7PcFHKp2iYEJyTmJiC9M2MMp0_eMwvN2DHXohaQoiT9JEmuk2FFg4P-JGo_4/exec';
+
 export function FreeAnalysis() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [formData, setFormData] = useState({
     district: '',
     neighborhood: '',
@@ -88,6 +91,7 @@ export function FreeAnalysis() {
 
   const updateFormData = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    setSubmitError('');
   };
 
   const isStepValid = () => {
@@ -121,22 +125,36 @@ export function FreeAnalysis() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
+    setSubmitError('');
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Store form data (in real app, send to backend)
-    console.log('Form submitted:', formData);
-    
-    // Navigate to confirmation page
-    navigate('/analiz-onay');
+    try {
+      const response = await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      
+      const result = await response.json();
+      
+      if (result.result === 'success') {
+        navigate('/analiz-onay');
+      } else {
+        throw new Error(result.message || 'Bir hata oluştu');
+      }
+      
+    } catch (error) {
+      console.error('Form gönderim hatası:', error);
+      setSubmitError('Form gönderilirken bir hata oluştu. Lütfen tekrar deneyin veya WhatsApp üzerinden bize ulaşın.');
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="min-h-screen pt-24 pb-32">
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="max-w-3xl mx-auto">
-          {/* Header */}
           <div className="text-center mb-10">
             <h1 className="text-3xl lg:text-4xl font-bold text-white mb-4">
               Ücretsiz Ön Analiz
@@ -147,7 +165,6 @@ export function FreeAnalysis() {
             </p>
           </div>
 
-          {/* Progress Steps */}
           <div className="mb-10">
             <div className="flex items-center justify-between mb-4">
               {steps.map((step, index) => (
@@ -186,11 +203,15 @@ export function FreeAnalysis() {
             </div>
           </div>
 
-          {/* Form Card */}
           <Card className="bg-navy-800 border-navy-600/50">
             <CardContent className="p-6 lg:p-8">
+              {submitError && (
+                <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
+                  <p className="text-red-400 text-sm">{submitError}</p>
+                </div>
+              )}
+
               <AnimatePresence mode="wait">
-                {/* Step 1: Location */}
                 {currentStep === 1 && (
                   <motion.div
                     key="step1"
@@ -255,7 +276,6 @@ export function FreeAnalysis() {
                   </motion.div>
                 )}
 
-                {/* Step 2: Project Type */}
                 {currentStep === 2 && (
                   <motion.div
                     key="step2"
@@ -266,15 +286,15 @@ export function FreeAnalysis() {
                   >
                     <div className="grid sm:grid-cols-2 gap-4">
                       <button
-                        onClick={() => updateFormData('projectType', 'building')}
+                        onClick={() => updateFormData('projectType', 'Bina Dönüşümü')}
                         className={`p-6 rounded-xl border-2 text-left transition-all ${
-                          formData.projectType === 'building'
+                          formData.projectType === 'Bina Dönüşümü'
                             ? 'border-orange-500 bg-orange-500/10'
                             : 'border-navy-600 bg-navy-700 hover:border-navy-500'
                         }`}
                       >
                         <Home className={`w-10 h-10 mb-4 ${
-                          formData.projectType === 'building' ? 'text-orange-500' : 'text-slate-400'
+                          formData.projectType === 'Bina Dönüşümü' ? 'text-orange-500' : 'text-slate-400'
                         }`} />
                         <h3 className="text-white font-semibold mb-2">Bina Dönüşümü</h3>
                         <p className="text-slate-400 text-sm">
@@ -283,15 +303,15 @@ export function FreeAnalysis() {
                       </button>
 
                       <button
-                        onClick={() => updateFormData('projectType', 'land')}
+                        onClick={() => updateFormData('projectType', 'Arsa Kat Karşılığı')}
                         className={`p-6 rounded-xl border-2 text-left transition-all ${
-                          formData.projectType === 'land'
+                          formData.projectType === 'Arsa Kat Karşılığı'
                             ? 'border-orange-500 bg-orange-500/10'
                             : 'border-navy-600 bg-navy-700 hover:border-navy-500'
                         }`}
                       >
                         <LandPlot className={`w-10 h-10 mb-4 ${
-                          formData.projectType === 'land' ? 'text-orange-500' : 'text-slate-400'
+                          formData.projectType === 'Arsa Kat Karşılığı' ? 'text-orange-500' : 'text-slate-400'
                         }`} />
                         <h3 className="text-white font-semibold mb-2">Arsa Kat Karşılığı</h3>
                         <p className="text-slate-400 text-sm">
@@ -302,7 +322,6 @@ export function FreeAnalysis() {
                   </motion.div>
                 )}
 
-                {/* Step 3: Known Data */}
                 {currentStep === 3 && (
                   <motion.div
                     key="step3"
@@ -470,7 +489,6 @@ export function FreeAnalysis() {
                   </motion.div>
                 )}
 
-                {/* Step 4: Goal */}
                 {currentStep === 4 && (
                   <motion.div
                     key="step4"
@@ -485,19 +503,19 @@ export function FreeAnalysis() {
 
                     {[
                       {
-                        value: 'teklif',
+                        value: 'Teklif almak istiyorum',
                         label: 'Teklif almak istiyorum',
                         description: 'Müteahhitlerden teklif toplama sürecini başlatmak',
                         icon: FileText,
                       },
                       {
-                        value: 'rapor',
+                        value: 'Detaylı rapor istiyorum',
                         label: 'Detaylı rapor istiyorum',
                         description: 'Kapsamlı finansal ve teknik analiz raporu',
                         icon: FileText,
                       },
                       {
-                        value: 'info',
+                        value: 'Sadece ön bilgi',
                         label: 'Sadece ön bilgi',
                         description: 'Potansiyelimi öğrenmek, karar vermek için zaman istiyorum',
                         icon: HelpCircle,
@@ -524,7 +542,6 @@ export function FreeAnalysis() {
                   </motion.div>
                 )}
 
-                {/* Step 5: Contact */}
                 {currentStep === 5 && (
                   <motion.div
                     key="step5"
@@ -612,7 +629,6 @@ export function FreeAnalysis() {
                 )}
               </AnimatePresence>
 
-              {/* Navigation Buttons */}
               <div className="flex items-center justify-between mt-8 pt-6 border-t border-navy-600/30">
                 <Button
                   variant="outline"
@@ -656,7 +672,6 @@ export function FreeAnalysis() {
             </CardContent>
           </Card>
 
-          {/* Info Box */}
           <div className="mt-8 bg-navy-800/50 border border-navy-600/30 rounded-xl p-6">
             <div className="flex items-start gap-4">
               <MessageSquare className="w-6 h-6 text-orange-500 flex-shrink-0 mt-1" />
@@ -666,12 +681,7 @@ export function FreeAnalysis() {
                   Formu doldurmadan önce veya süreç hakkında bilgi almak için 
                   WhatsApp hattımızdan bize ulaşabilirsiniz.
                 </p>
-                <a
-                  href="https://wa.me/905336820942"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-green-500 hover:text-green-400 font-medium"
-                >
+                <a href="https://wa.me/905336820942" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-green-500 hover:text-green-400 font-medium">
                   WhatsApp'tan Yaz
                   <ChevronRight className="w-4 h-4" />
                 </a>
