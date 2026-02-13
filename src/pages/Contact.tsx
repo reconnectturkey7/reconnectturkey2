@@ -58,7 +58,7 @@ const contactInfo: ContactSection[] = [
       { label: 'Cumartesi', value: '10:00 - 14:00' },
     ],
   },
-};
+];
 
 export function Contact() {
   const [formData, setFormData] = useState({
@@ -76,7 +76,6 @@ export function Contact() {
     e.preventDefault();
     setIsLoading(true);
     
-    // E-posta oluştur
     const subject = `Yeni İletişim Formu: ${formData.subject || 'Genel'}`;
     const body = `
 Ad Soyad: ${formData.name}
@@ -88,10 +87,7 @@ Mesaj:
 ${formData.message}
     `.trim();
     
-    // Mailto linki oluştur
     const mailtoLink = `mailto:info@kdankara.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    
-    // Kullanıcının e-posta istemcisini aç
     window.location.href = mailtoLink;
     
     setTimeout(() => {
@@ -134,7 +130,6 @@ ${formData.message}
     <div className="min-h-screen pt-24 pb-20">
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="max-w-6xl mx-auto">
-          {/* Header */}
           <div className="text-center mb-16">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -150,7 +145,6 @@ ${formData.message}
           </div>
 
           <div className="grid lg:grid-cols-5 gap-8">
-            {/* Contact Form */}
             <div className="lg:col-span-3">
               <Card className="bg-navy-800 border-navy-600/50">
                 <CardContent className="p-6 lg:p-8">
@@ -269,7 +263,6 @@ ${formData.message}
               </Card>
             </div>
 
-            {/* Contact Info */}
             <div className="lg:col-span-2 space-y-6">
               {contactInfo.map((info, index) => (
                 <motion.div
@@ -313,7 +306,6 @@ ${formData.message}
                 </motion.div>
               ))}
 
-              {/* WhatsApp CTA */}
               <a
                 href="https://wa.me/905336820942"
                 target="_blank"
