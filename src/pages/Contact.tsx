@@ -32,8 +32,8 @@ const contactInfo: ContactSection[] = [
     icon: Phone,
     title: 'Telefon',
     items: [
-      { label: 'Sabit', value: '0312 236 10 17', href: 'tel:03122361017' },
-      { label: 'Mobil', value: '0533 682 09 42', href: 'tel:05336820942' },
+      { label: 'Sabit', value: '0312 236 10 17', href: 'tel:+903122361017' },
+      { label: 'Mobil', value: '0533 682 09 42', href: 'tel:+905336820942' },
     ],
   },
   {
@@ -58,7 +58,7 @@ const contactInfo: ContactSection[] = [
       { label: 'Cumartesi', value: '10:00 - 14:00' },
     ],
   },
-];
+};
 
 export function Contact() {
   const [formData, setFormData] = useState({
@@ -70,11 +70,33 @@ export function Contact() {
     kvkkConsent: false,
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    
+    // E-posta oluştur
+    const subject = `Yeni İletişim Formu: ${formData.subject || 'Genel'}`;
+    const body = `
+Ad Soyad: ${formData.name}
+E-posta: ${formData.email || 'Belirtilmedi'}
+Telefon: ${formData.phone}
+Konu: ${formData.subject || 'Belirtilmedi'}
+
+Mesaj:
+${formData.message}
+    `.trim();
+    
+    // Mailto linki oluştur
+    const mailtoLink = `mailto:info@kdankara.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    // Kullanıcının e-posta istemcisini aç
+    window.location.href = mailtoLink;
+    
     setTimeout(() => {
       setIsSubmitted(true);
+      setIsLoading(false);
     }, 1000);
   };
 
@@ -91,10 +113,10 @@ export function Contact() {
               <CheckCircle2 className="w-10 h-10 text-green-500" />
             </div>
             <h1 className="text-3xl font-bold text-white mb-4">
-              Mesajınız Gönderildi
+              Teşekkürler!
             </h1>
             <p className="text-slate-400 mb-8">
-              En kısa sürede size dönüş yapacağız.
+              E-posta istemciniz açıldı. Mesajınızı göndererek bize ulaşabilirsiniz.
             </p>
             <Button
               asChild
@@ -230,10 +252,17 @@ export function Contact() {
 
                     <Button
                       type="submit"
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold"
+                      disabled={isLoading}
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold disabled:opacity-50"
                     >
-                      <Send className="w-4 h-4 mr-2" />
-                      Gönder
+                      {isLoading ? (
+                        'Hazırlanıyor...'
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-2" />
+                          Gönder
+                        </>
+                      )}
                     </Button>
                   </form>
                 </CardContent>
