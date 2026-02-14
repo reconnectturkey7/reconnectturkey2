@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MapPin, 
@@ -15,8 +14,11 @@ import {
   LandPlot,
   FileText,
   MessageSquare,
-  HelpCircle
+  HelpCircle,
+  Loader2
 } from 'lucide-react';
+
+// UI Bileşenleri (Projenizde zaten var olan yapı)
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,7 +42,7 @@ import {
 const steps = [
   { id: 1, title: 'Konum', icon: MapPin },
   { id: 2, title: 'Tip Seçimi', icon: Building2 },
-  { id: 3, title: 'Bilinen Veriler', icon: Calculator },
+  { id: 3, title: 'Teknik Veriler', icon: Calculator },
   { id: 4, title: 'Hedef', icon: Target },
   { id: 5, title: 'İletişim', icon: User },
 ];
@@ -48,22 +50,20 @@ const steps = [
 const districts = [
   'Çankaya', 'Keçiören', 'Yenimahalle', 'Mamak', 'Etimesgut',
   'Sincan', 'Altındağ', 'Pursaklar', 'Gölbaşı', 'Polatlı',
-  'Kahramankazan', 'Akyurt', 'Elmadağ', 'Beypazarı', 'Çubuk',
-  'Haymana', 'Kalecik', 'Kızılcahamam', 'Nallıhan', 'Şereflikoçhisar'
+  'Kahramankazan', 'Akyurt', 'Elmadağ', 'Beypazarı'
 ];
 
-const buildingAges = [
-  '0-10 yıl', '11-20 yıl', '21-30 yıl', '31-40 yıl', '40+ yıl', 'Bilmiyorum'
-];
+const buildingAges = ['0-10 yıl', '11-20 yıl', '21-30 yıl', '31-40 yıl', '40+ yıl', 'Bilmiyorum'];
+const floorCounts = ['1-3 kat', '4-6 kat', '7-10 kat', '11+ kat', 'Bilmiyorum'];
 
-const floorCounts = [
-  '1-3 kat', '4-6 kat', '7-10 kat', '11+ kat', 'Bilmiyorum'
-];
-
-export function FreeAnalysis() {
-  const navigate = useNavigate();
+export default function FreeAnalysis() { // Export default olarak düzelttim
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false); // Başarı durumu eklendi
+
+  // BİZİM GOOGLE MOTORU BURADA:
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbybyxuN7PcFHKp2iYEJyTmJiC9M2MMp0_eMwvN2DHXohaQoiT9JEmuk2FFg4P-JGo_4/exec';
+
   const [formData, setFormData] = useState({
     district: '',
     neighborhood: '',
@@ -92,45 +92,86 @@ export function FreeAnalysis() {
 
   const isStepValid = () => {
     switch (currentStep) {
-      case 1:
-        return formData.district && formData.neighborhood;
-      case 2:
-        return formData.projectType;
-      case 3:
-        return formData.landArea;
-      case 4:
-        return formData.goal;
-      case 5:
-        return formData.fullName && formData.phone && formData.kvkkConsent;
-      default:
-        return false;
+      case 1: return formData.district && formData.neighborhood;
+      case 2: return formData.projectType;
+      case 3: return formData.landArea; // Sadece m2 zorunlu
+      case 4: return formData.goal;
+      case 5: return formData.fullName && formData.phone && formData.kvkkConsent;
+      default: return false;
     }
   };
 
   const handleNext = () => {
-    if (currentStep < steps.length) {
-      setCurrentStep(prev => prev + 1);
-    }
+    if (currentStep < steps.length) setCurrentStep(prev => prev + 1);
   };
 
   const handlePrev = () => {
-    if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
-    }
+    if (currentStep > 1) setCurrentStep(prev => prev - 1);
   };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // 1. Verileri Google Sheets formatına hazırla
+    const dataToSend = new FormData();
+    dataToSend.append('adsoyad', formData.fullName);
+    dataToSend.append('telefon', formData.phone);
+    dataToSend.append('bolge', `${formData.district} / ${formData.neighborhood} (${formData.address || ''})`);
+    dataToSend.append('adaparsel', `Ada: ${formData.ada} / Parsel: ${formData.parsel}`);
+    dataToSend.append('mulkiyet', formData.projectType === 'building' ? 'Bina Dönüşümü' : 'Arsa Sahibi');
     
-    // Store form data (in real app, send to backend)
-    console.log('Form submitted:', formData);
-    
-    // Navigate to confirmation page
-    navigate('/analiz-onay');
+    // Detaylı notları birleştirip tek hücreye yazıyoruz
+    const details = `
+      Hedef: ${formData.goal}
+      Alan: ${formData.landArea} m2
+      Emsal: ${formData.emsal}
+      Kat: ${formData.floorCount}
+      Yaş: ${formData.buildingAge}
+      Daire: ${formData.apartmentCount}
+      Email: ${formData.email}
+    `;
+    dataToSend.append('notlar', details.trim());
+
+    // 2. Google Script'e Gönder
+    try {
+      await fetch(scriptURL, { method: 'POST', body: dataToSend });
+      setIsSubmitting(false);
+      setIsSuccess(true); // Başarılı ekranını aç
+    } catch (error) {
+      console.error('Hata:', error);
+      setIsSubmitting(false);
+      alert("Bağlantı hatası oluştu. Lütfen WhatsApp üzerinden iletişime geçin.");
+    }
   };
+
+  // BAŞARI EKRANI (FORM GÖNDERİLİNCE ÇIKAR)
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen pt-24 pb-32 flex items-center justify-center px-4">
+        <Card className="bg-navy-800 border-navy-600/50 max-w-lg w-full text-center p-8">
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="flex flex-col items-center"
+          >
+            <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-500/20">
+              <CheckCircle2 className="w-10 h-10 text-white" />
+            </div>
+            <h2 className="text-3xl font-bold text-white mb-4">Başvurunuz Alındı!</h2>
+            <p className="text-slate-300 mb-8 text-lg">
+              Analiz talebiniz sistemimize başarıyla işlendi. Uzman ekibimiz <span className="text-orange-500 font-bold">48 saat içinde</span> teknik raporunuzu hazırlayıp size dönüş yapacaktır.
+            </p>
+            <Button 
+              onClick={() => window.location.href = '/'} // Ana sayfaya yönlendir
+              className="bg-orange-500 hover:bg-orange-600 text-white w-full py-6 text-lg"
+            >
+              Ana Sayfaya Dön
+            </Button>
+          </motion.div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-24 pb-32">
@@ -240,13 +281,13 @@ export function FreeAnalysis() {
 
                       <div>
                         <Label htmlFor="address" className="text-white mb-2 block">
-                          Adres (Opsiyonel)
+                          Adres Detayı (Opsiyonel)
                         </Label>
                         <textarea
                           id="address"
                           value={formData.address}
                           onChange={(e) => updateFormData('address', e.target.value)}
-                          placeholder="Sokak, bina no vb. detaylar..."
+                          placeholder="Cadde, sokak vb."
                           rows={3}
                           className="w-full px-3 py-2 bg-navy-700 border border-navy-600 rounded-md text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
                         />
@@ -278,7 +319,7 @@ export function FreeAnalysis() {
                         }`} />
                         <h3 className="text-white font-semibold mb-2">Bina Dönüşümü</h3>
                         <p className="text-slate-400 text-sm">
-                          Mevcut binanızın yenilenmesi veya yeni bina inşası
+                          Mevcut binanızın yenilenmesi
                         </p>
                       </button>
 
@@ -295,7 +336,7 @@ export function FreeAnalysis() {
                         }`} />
                         <h3 className="text-white font-semibold mb-2">Arsa Kat Karşılığı</h3>
                         <p className="text-slate-400 text-sm">
-                          Boş arsanız üzerine kat karşılığı inşaat projesi
+                          Boş arsa üzerine proje geliştirme
                         </p>
                       </button>
                     </div>
@@ -315,22 +356,12 @@ export function FreeAnalysis() {
                       <div>
                         <Label htmlFor="ada" className="text-white mb-2 block flex items-center gap-2">
                           Ada No
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <Info className="w-4 h-4 text-slate-500" />
-                              </TooltipTrigger>
-                              <TooltipContent className="bg-navy-800 border-navy-600">
-                                <p className="text-slate-300 text-sm">Tapu üzerindeki ada numarası</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
                         </Label>
                         <Input
                           id="ada"
                           value={formData.ada}
                           onChange={(e) => updateFormData('ada', e.target.value)}
-                          placeholder="Örn: 123"
+                          placeholder="Tapudaki Ada No"
                           className="bg-navy-700 border-navy-600 text-white placeholder:text-slate-500"
                         />
                       </div>
@@ -338,45 +369,12 @@ export function FreeAnalysis() {
                       <div>
                         <Label htmlFor="parsel" className="text-white mb-2 block flex items-center gap-2">
                           Parsel No
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <Info className="w-4 h-4 text-slate-500" />
-                              </TooltipTrigger>
-                              <TooltipContent className="bg-navy-800 border-navy-600">
-                                <p className="text-slate-300 text-sm">Tapu üzerindeki parsel numarası</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
                         </Label>
                         <Input
                           id="parsel"
                           value={formData.parsel}
                           onChange={(e) => updateFormData('parsel', e.target.value)}
-                          placeholder="Örn: 45"
-                          className="bg-navy-700 border-navy-600 text-white placeholder:text-slate-500"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="emsal" className="text-white mb-2 block flex items-center gap-2">
-                          Emsal (Haks)
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <Info className="w-4 h-4 text-slate-500" />
-                              </TooltipTrigger>
-                              <TooltipContent className="bg-navy-800 border-navy-600">
-                                <p className="text-slate-300 text-sm">İmar durumundaki emsal değeri</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </Label>
-                        <Input
-                          id="emsal"
-                          value={formData.emsal}
-                          onChange={(e) => updateFormData('emsal', e.target.value)}
-                          placeholder="Örn: 2.5"
+                          placeholder="Tapudaki Parsel No"
                           className="bg-navy-700 border-navy-600 text-white placeholder:text-slate-500"
                         />
                       </div>
@@ -394,10 +392,23 @@ export function FreeAnalysis() {
                           className="bg-navy-700 border-navy-600 text-white placeholder:text-slate-500"
                         />
                       </div>
+                      
+                       <div>
+                        <Label htmlFor="emsal" className="text-white mb-2 block">
+                          Emsal (Varsa)
+                        </Label>
+                        <Input
+                          id="emsal"
+                          value={formData.emsal}
+                          onChange={(e) => updateFormData('emsal', e.target.value)}
+                          placeholder="Örn: 2.0"
+                          className="bg-navy-700 border-navy-600 text-white placeholder:text-slate-500"
+                        />
+                      </div>
 
                       <div>
                         <Label htmlFor="floorCount" className="text-white mb-2 block">
-                          Kat Adedi
+                          Mevcut Kat
                         </Label>
                         <Select
                           value={formData.floorCount}
@@ -408,11 +419,7 @@ export function FreeAnalysis() {
                           </SelectTrigger>
                           <SelectContent className="bg-navy-800 border-navy-600">
                             {floorCounts.map((count) => (
-                              <SelectItem
-                                key={count}
-                                value={count}
-                                className="text-white hover:bg-navy-700"
-                              >
+                              <SelectItem key={count} value={count} className="text-white hover:bg-navy-700">
                                 {count}
                               </SelectItem>
                             ))}
@@ -420,7 +427,7 @@ export function FreeAnalysis() {
                         </Select>
                       </div>
 
-                      <div>
+                       <div>
                         <Label htmlFor="buildingAge" className="text-white mb-2 block">
                           Bina Yaşı
                         </Label>
@@ -433,39 +440,13 @@ export function FreeAnalysis() {
                           </SelectTrigger>
                           <SelectContent className="bg-navy-800 border-navy-600">
                             {buildingAges.map((age) => (
-                              <SelectItem
-                                key={age}
-                                value={age}
-                                className="text-white hover:bg-navy-700"
-                              >
+                              <SelectItem key={age} value={age} className="text-white hover:bg-navy-700">
                                 {age}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
-
-                      <div className="sm:col-span-2">
-                        <Label htmlFor="apartmentCount" className="text-white mb-2 block">
-                          Mevcut Daire Sayısı (Opsiyonel)
-                        </Label>
-                        <Input
-                          id="apartmentCount"
-                          value={formData.apartmentCount}
-                          onChange={(e) => updateFormData('apartmentCount', e.target.value)}
-                          placeholder="Örn: 8"
-                          type="number"
-                          className="bg-navy-700 border-navy-600 text-white placeholder:text-slate-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="bg-navy-700/50 rounded-lg p-4 flex items-start gap-3">
-                      <Info className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
-                      <p className="text-slate-400 text-sm">
-                        Bilmediğiniz alanları boş bırakabilirsiniz. Eksik bilgileri 
-                        ön analiz sürecinde tamamlayabiliriz.
-                      </p>
                     </div>
                   </motion.div>
                 )}
@@ -484,24 +465,9 @@ export function FreeAnalysis() {
                     </p>
 
                     {[
-                      {
-                        value: 'teklif',
-                        label: 'Teklif almak istiyorum',
-                        description: 'Müteahhitlerden teklif toplama sürecini başlatmak',
-                        icon: FileText,
-                      },
-                      {
-                        value: 'rapor',
-                        label: 'Detaylı rapor istiyorum',
-                        description: 'Kapsamlı finansal ve teknik analiz raporu',
-                        icon: FileText,
-                      },
-                      {
-                        value: 'info',
-                        label: 'Sadece ön bilgi',
-                        description: 'Potansiyelimi öğrenmek, karar vermek için zaman istiyorum',
-                        icon: HelpCircle,
-                      },
+                      { value: 'teklif', label: 'Teklif almak istiyorum', description: 'Müteahhitlerden teklif toplama sürecini başlatmak', icon: FileText },
+                      { value: 'rapor', label: 'Detaylı rapor istiyorum', description: 'Kapsamlı finansal ve teknik analiz raporu', icon: FileText },
+                      { value: 'info', label: 'Sadece ön bilgi', description: 'Potansiyelimi öğrenmek, karar vermek için zaman istiyorum', icon: HelpCircle },
                     ].map((option) => (
                       <button
                         key={option.value}
@@ -512,9 +478,7 @@ export function FreeAnalysis() {
                             : 'border-navy-600 bg-navy-700 hover:border-navy-500'
                         }`}
                       >
-                        <option.icon className={`w-6 h-6 mt-1 ${
-                          formData.goal === option.value ? 'text-orange-500' : 'text-slate-400'
-                        }`} />
+                        <option.icon className={`w-6 h-6 mt-1 ${formData.goal === option.value ? 'text-orange-500' : 'text-slate-400'}`} />
                         <div>
                           <h4 className="text-white font-medium mb-1">{option.label}</h4>
                           <p className="text-slate-400 text-sm">{option.description}</p>
@@ -542,14 +506,14 @@ export function FreeAnalysis() {
                           id="fullName"
                           value={formData.fullName}
                           onChange={(e) => updateFormData('fullName', e.target.value)}
-                          placeholder="Adınız ve soyadınız"
+                          placeholder="Adınız Soyadınız"
                           className="bg-navy-700 border-navy-600 text-white placeholder:text-slate-500"
                         />
                       </div>
 
                       <div>
                         <Label htmlFor="phone" className="text-white mb-2 block">
-                          Telefon <span className="text-orange-500">*</span>
+                          Telefon (WhatsApp) <span className="text-orange-500">*</span>
                         </Label>
                         <Input
                           id="phone"
@@ -580,30 +544,11 @@ export function FreeAnalysis() {
                           <Checkbox
                             id="kvkk"
                             checked={formData.kvkkConsent}
-                            onCheckedChange={(checked) => 
-                              updateFormData('kvkkConsent', checked as boolean)
-                            }
+                            onCheckedChange={(checked) => updateFormData('kvkkConsent', checked as boolean)}
                             className="mt-1 border-navy-500 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
                           />
                           <Label htmlFor="kvkk" className="text-slate-400 text-sm leading-relaxed cursor-pointer">
-                            <span className="text-orange-500">*</span>{' '}
-                            <a href="/kvkk" target="_blank" className="text-orange-500 hover:underline">
-                              KVKK Aydınlatma Metni
-                            </a>'ni okudum, kişisel verilerimin işlenmesine onay veriyorum.
-                          </Label>
-                        </div>
-
-                        <div className="flex items-start gap-3">
-                          <Checkbox
-                            id="marketing"
-                            checked={formData.marketingConsent}
-                            onCheckedChange={(checked) => 
-                              updateFormData('marketingConsent', checked as boolean)
-                            }
-                            className="mt-1 border-navy-500 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
-                          />
-                          <Label htmlFor="marketing" className="text-slate-400 text-sm leading-relaxed cursor-pointer">
-                            Kampanya ve duyurularınızdan haberdar olmak istiyorum.
+                            <span className="text-orange-500">*</span> Kişisel verilerimin analiz için işlenmesini onaylıyorum.
                           </Label>
                         </div>
                       </div>
@@ -641,7 +586,7 @@ export function FreeAnalysis() {
                   >
                     {isSubmitting ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
                         Gönderiliyor...
                       </>
                     ) : (
