@@ -5,153 +5,203 @@ const FreeAnalysis = () => {
   const [statusMessage, setStatusMessage] = useState('');
   const [statusColor, setStatusColor] = useState('');
 
-  // Google Apps Script Webhook URL'imiz
+  // Webhook URL
   const scriptURL = 'https://script.google.com/macros/s/AKfycbybyxuN7PcFHKp2iYEJyTmJiC9M2MMp0_eMwvN2DHXohaQoiT9JEmuk2FFg4P-JGo_4/exec';
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    setStatusMessage('Analiz talebiniz iletiliyor...');
-    setStatusColor('blue');
+    setStatusMessage('Analiz talebiniz merkeze iletiliyor...');
+    setStatusColor('#3498db'); // Mavi bilgilendirme
 
     const form = e.currentTarget;
     const formData = new FormData(form);
 
     fetch(scriptURL, { method: 'POST', body: formData })
       .then(() => {
-        setStatusMessage('Talebiniz alındı! Uzmanlarımız 48 saat içinde size rapor sunacak.');
-        setStatusColor('green');
+        setStatusMessage('BAŞVURUNUZ ALINDI. Uzman ekibimiz teknik dosyayı hazırlıyor.');
+        setStatusColor('#27ae60'); // Yeşil onay
         form.reset();
         setIsLoading(false);
       })
       .catch(error => {
         console.error('Error!', error.message);
-        setStatusMessage('Bir hata oluştu. Lütfen WhatsApp üzerinden iletişime geçin.');
-        setStatusColor('red');
+        setStatusMessage('Sistem yoğunluğu var. Lütfen WhatsApp hattımızdan ulaşın.');
+        setStatusColor('#c0392b'); // Kırmızı hata
         setIsLoading(false);
       });
   };
 
+  // Tasarım Stilleri (CSS-in-JS)
+  const styles = {
+    pageContainer: {
+      background: 'linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d)', // Modern Gradient Arkaplan
+      minHeight: '100vh',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: '20px',
+      fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+    },
+    card: {
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      borderRadius: '20px',
+      boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+      maxWidth: '800px',
+      width: '100%',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column' as 'column', // TypeScript fix
+    },
+    header: {
+      background: '#2c3e50',
+      padding: '40px',
+      textAlign: 'center' as 'center',
+      borderBottom: '5px solid #e67e22' // KD Ankara Turuncusu
+    },
+    headerTitle: {
+      color: '#fff',
+      margin: 0,
+      fontSize: '28px',
+      fontWeight: '700',
+      letterSpacing: '1px'
+    },
+    headerSubtitle: {
+      color: '#bdc3c7',
+      marginTop: '10px',
+      fontSize: '16px',
+      fontWeight: '300'
+    },
+    formBody: {
+      padding: '40px',
+    },
+    inputGroup: {
+      marginBottom: '20px'
+    },
+    label: {
+      display: 'block',
+      marginBottom: '8px',
+      fontSize: '13px',
+      fontWeight: '600',
+      color: '#34495e',
+      textTransform: 'uppercase' as 'uppercase'
+    },
+    input: {
+      width: '100%',
+      padding: '15px',
+      border: '2px solid #ecf0f1',
+      borderRadius: '8px',
+      fontSize: '15px',
+      transition: 'border-color 0.3s',
+      outline: 'none',
+      boxSizing: 'border-box' as 'border-box'
+    },
+    gridTwo: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: '20px'
+    },
+    highlightBox: {
+      backgroundColor: '#fffcf0',
+      border: '1px dashed #f39c12',
+      padding: '20px',
+      borderRadius: '10px',
+      marginBottom: '20px'
+    },
+    button: {
+      width: '100%',
+      padding: '18px',
+      backgroundColor: isLoading ? '#95a5a6' : '#c0392b', // Startkey Kırmızısı
+      color: '#fff',
+      border: 'none',
+      borderRadius: '8px',
+      fontSize: '16px',
+      fontWeight: 'bold',
+      cursor: isLoading ? 'not-allowed' : 'pointer',
+      boxShadow: '0 4px 15px rgba(192, 57, 43, 0.4)',
+      transition: 'transform 0.2s',
+      marginTop: '10px'
+    },
+    statusBox: {
+      marginTop: '20px',
+      padding: '15px',
+      borderRadius: '8px',
+      backgroundColor: statusColor,
+      color: '#fff',
+      textAlign: 'center' as 'center',
+      fontWeight: 'bold',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+    }
+  };
+
   return (
-    <div className="analysis-page" style={{ padding: '40px 20px', background: '#ecf0f1', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      
-      <div style={{ maxWidth: '700px', width: '100%', background: '#fff', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+    <div style={styles.pageContainer}>
+      <div style={styles.card}>
         
-        {/* Üst Başlık Alanı */}
-        <div style={{ background: '#2c3e50', padding: '30px', textAlign: 'center' }}>
-          <h2 style={{ color: '#ecf0f1', margin: 0, fontSize: '24px', fontFamily: 'Helvetica Neue, sans-serif' }}>
-            KD ANKARA | Parsel Analizi
-          </h2>
-          <p style={{ color: '#bdc3c7', marginTop: '10px', fontSize: '14px' }}>
-            Arsanızın veya binanızın gerçek dönüşüm değerini öğrenin.
-          </p>
+        {/* Header Kısmı */}
+        <div style={styles.header}>
+          <h2 style={styles.headerTitle}>GAYRİMENKUL ANALİZ RAPORU</h2>
+          <p style={styles.headerSubtitle}>Arsanızın gerçek potansiyelini "KD Ankara" güvencesiyle keşfedin.</p>
         </div>
 
         {/* Form Alanı */}
-        <div style={{ padding: '30px' }}>
-          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
+        <div style={styles.formBody}>
+          <form onSubmit={handleSubmit}>
             
             {/* Kişisel Bilgiler */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold', color: '#7f8c8d' }}>AD SOYAD</label>
-                <input 
-                  type="text" 
-                  name="adsoyad" 
-                  required 
-                  style={{ width: '100%', padding: '12px', border: '1px solid #dfe6e9', borderRadius: '6px', background: '#f9f9f9' }} 
-                />
+            <div style={styles.gridTwo}>
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Ad Soyad / Kurum</label>
+                <input style={styles.input} type="text" name="adsoyad" required placeholder="Tam Adınız" />
               </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold', color: '#7f8c8d' }}>TELEFON (WhatsApp)</label>
-                <input 
-                  type="tel" 
-                  name="telefon" 
-                  required 
-                  style={{ width: '100%', padding: '12px', border: '1px solid #dfe6e9', borderRadius: '6px', background: '#f9f9f9' }} 
-                />
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>İletişim (WhatsApp)</label>
+                <input style={styles.input} type="tel" name="telefon" required placeholder="05__ ___ __ __" />
               </div>
             </div>
 
-            {/* Konum Bilgileri */}
-            <div style={{ background: '#fff3cd', padding: '15px', borderRadius: '8px', border: '1px solid #ffeeba' }}>
-              <p style={{ margin: '0 0 10px 0', fontSize: '12px', color: '#856404', fontWeight: 'bold' }}>📍 TAPU BİLGİLERİ (Zorunlu)</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                <input 
-                  type="text" 
-                  name="bolge" 
-                  placeholder="İlçe / Mahalle (Örn: Çankaya)" 
-                  required
-                  style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px' }} 
-                />
-                <input 
-                  type="text" 
-                  name="adaparsel" 
-                  placeholder="Ada / Parsel No" 
-                  required 
-                  style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px' }} 
-                />
+            {/* Tapu Bilgileri - Önemli Alan */}
+            <div style={styles.highlightBox}>
+              <p style={{margin: '0 0 15px 0', color: '#e67e22', fontWeight: 'bold', fontSize: '14px'}}>📍 TEKNİK DETAYLAR (Eksiksiz doldurunuz)</p>
+              <div style={styles.gridTwo}>
+                <div style={styles.inputGroup}>
+                  <input style={{...styles.input, borderColor: '#f39c12'}} type="text" name="bolge" placeholder="İlçe / Mahalle (Örn: Çankaya)" required />
+                </div>
+                <div style={styles.inputGroup}>
+                  <input style={{...styles.input, borderColor: '#f39c12'}} type="text" name="adaparsel" placeholder="Ada / Parsel No" required />
+                </div>
               </div>
             </div>
 
             {/* Mülkiyet Durumu */}
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold', color: '#7f8c8d' }}>SİZİN DURUMUNUZ</label>
-              <select 
-                name="mulkiyet" 
-                defaultValue="" 
-                style={{ width: '100%', padding: '12px', border: '1px solid #dfe6e9', borderRadius: '6px', background: '#fff' }}
-              >
-                <option value="" disabled>Seçiniz</option>
-                <option value="Arsa Sahibi">Arsa Sahibi</option>
-                <option value="Kat Maliki">Kat Maliki / Bina Sakini</option>
-                <option value="Müteahhit/Yatırımcı">Müteahhit / Yatırımcı</option>
-                <option value="Emlakçı">Emlak Ofisi</option>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Mülkiyet Durumu</label>
+              <select name="mulkiyet" style={{...styles.input, backgroundColor: '#fff'}} defaultValue="">
+                <option value="" disabled>Lütfen Seçiniz</option>
+                <option value="Arsa Sahibi">Arsa Sahibi (Tek/Hisseli)</option>
+                <option value="Bina Sakini">Kat Maliki / Bina Yöneticisi</option>
+                <option value="Yatırımcı">Yatırımcı / Alıcı</option>
               </select>
             </div>
 
             {/* Notlar */}
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold', color: '#7f8c8d' }}>ÖZEL NOTLAR & BEKLENTİLER</label>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Özel İstekler & Beklentiler</label>
               <textarea 
                 name="notlar" 
-                placeholder="Örn: Kat karşılığı oran beklentim %50..." 
-                style={{ width: '100%', padding: '12px', border: '1px solid #dfe6e9', borderRadius: '6px', height: '100px', fontFamily: 'inherit' }}
+                style={{...styles.input, height: '100px', fontFamily: 'inherit'}} 
+                placeholder="Örn: Kat karşılığı %50 istiyoruz, nakit satış düşünüyoruz..."
               ></textarea>
             </div>
 
-            {/* Gönder Butonu */}
-            <button 
-              type="submit" 
-              disabled={isLoading}
-              style={{ 
-                backgroundColor: isLoading ? '#95a5a6' : '#e67e22', // KD Ankara Turuncusu
-                color: 'white', 
-                padding: '16px', 
-                border: 'none', 
-                borderRadius: '6px', 
-                fontWeight: 'bold', 
-                fontSize: '16px',
-                cursor: isLoading ? 'not-allowed' : 'pointer', 
-                transition: 'all 0.3s',
-                marginTop: '10px'
-              }}
-            >
-              {isLoading ? "İŞLENİYOR..." : "ÜCRETSİZ ANALİZİ BAŞLAT"}
+            {/* Buton */}
+            <button type="submit" style={styles.button} disabled={isLoading}>
+              {isLoading ? "SİSTEM İŞLİYOR..." : "ÜCRETSİZ ANALİZİ BAŞLAT"}
             </button>
 
-            {/* Durum Mesajı */}
+            {/* Sonuç Mesajı */}
             {statusMessage && (
-              <div style={{ 
-                marginTop: '15px', 
-                padding: '10px', 
-                borderRadius: '4px', 
-                backgroundColor: statusColor === 'green' ? '#d4edda' : statusColor === 'red' ? '#f8d7da' : '#cce5ff',
-                color: statusColor === 'green' ? '#155724' : statusColor === 'red' ? '#721c24' : '#004085',
-                textAlign: 'center',
-                fontWeight: 'bold',
-                fontSize: '14px'
-              }}>
+              <div style={styles.statusBox}>
                 {statusMessage}
               </div>
             )}
