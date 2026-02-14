@@ -14,8 +14,7 @@ import {
   FileText,
   MessageSquare,
   HelpCircle,
-  Loader2,
-  Info
+  Loader2
 } from 'lucide-react';
 
 // --- CEO'NUN ÖZEL UI PARÇALARI (Bağımlılık Yok) ---
@@ -125,7 +124,8 @@ export default function FreeAnalysis() {
     dataToSend.append('adaparsel', `Ada: ${formData.ada} / Parsel: ${formData.parsel}`);
     dataToSend.append('mulkiyet', formData.projectType === 'building' ? 'Bina' : 'Arsa');
     
-    const details = `Hedef: ${formData.goal}, Alan: ${formData.landArea}, Emsal: ${formData.emsal}, Kat: ${formData.floorCount}, Not: ${formData.address}`;
+    // Detayları buraya ekledik
+    const details = `Hedef: ${formData.goal}, Alan: ${formData.landArea} m2, Emsal: ${formData.emsal}, Kat: ${formData.floorCount}, Bina Yaşı: ${formData.buildingAge}, Not: ${formData.address}`;
     dataToSend.append('notlar', details);
 
     try {
@@ -169,7 +169,7 @@ export default function FreeAnalysis() {
         {/* İlerleme Çubuğu */}
         <div className="mb-10">
           <div className="flex justify-between mb-4 px-2">
-            {steps.map((step, i) => (
+            {steps.map((step) => ( // 'i' değişkeni kaldırıldı
               <div key={step.id} className={`flex flex-col items-center gap-2 ${currentStep === step.id ? 'text-orange-500' : step.id < currentStep ? 'text-green-500' : 'text-slate-600'}`}>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${currentStep === step.id ? 'border-orange-500 bg-orange-500/10' : step.id < currentStep ? 'border-green-500 bg-green-500/10' : 'border-slate-700 bg-slate-900'}`}>
                   {step.id < currentStep ? <CheckCircle2 size={18} /> : <step.icon size={18} />}
@@ -264,6 +264,11 @@ export default function FreeAnalysis() {
                 <div>
                   <Label>Mevcut Kat</Label>
                   <Select value={formData.floorCount} onChange={(v: string) => updateFormData('floorCount', v)} options={floorCounts} placeholder="Seçiniz" />
+                </div>
+                {/* EKLENEN KISIM: Bina Yaşı Kullanıldı */}
+                <div>
+                  <Label>Bina Yaşı</Label>
+                  <Select value={formData.buildingAge} onChange={(v: string) => updateFormData('buildingAge', v)} options={buildingAges} placeholder="Seçiniz" />
                 </div>
               </motion.div>
             )}
