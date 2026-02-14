@@ -71,7 +71,7 @@ const districts = [
 const buildingAges = ['0-10 yıl', '11-20 yıl', '21-30 yıl', '31-40 yıl', '40+ yıl', 'Bilmiyorum'];
 const floorCounts = ['1-3 kat', '4-6 kat', '7-10 kat', '11+ kat', 'Bilmiyorum'];
 
-export default function FreeAnalysis() {
+export function FreeAnalysis() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -367,3 +367,4 @@ export default function FreeAnalysis() {
     </div>
   );
 }
+export default FreeAnalysis;
