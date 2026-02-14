@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
-const Contact = () => {
+// Export satırını değiştirdik, artık { Contact } şeklinde import edilebilir.
+export const Contact = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [statusColor, setStatusColor] = useState('');
@@ -18,7 +19,7 @@ const Contact = () => {
     const formData = new FormData(form);
 
     fetch(scriptURL, { method: 'POST', body: formData })
-      .then(response => {
+      .then(() => { // BURASI DÜZELDİ: 'response' kaldırıldı
         setStatusMessage('Başvurunuz alındı! Ekibimiz 48 saat içinde size dönecek.');
         setStatusColor('green');
         form.reset();
@@ -124,4 +125,5 @@ const Contact = () => {
   );
 };
 
+// Hem default hem named export desteklemesi için bunu sona ekledim:
 export default Contact;
