@@ -5,7 +5,7 @@ import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { StickyCTA } from './components/layout/StickyCTA';
 import { Home } from './pages/Home';
-import { FreeAnalysis } from './pages/FreeAnalysis';
+import FreeAnalysis from "./pages/FreeAnalysis";
 import { Services } from './pages/Services';
 import { Process } from './pages/Process';
 import { LandDevelopment } from './pages/LandDevelopment';
